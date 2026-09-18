@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, Search, PlusCircle, ShieldCheck } from 'lucide-react';
 
-export const Navbar = () => {
+export const Navbar = ({ onOpenPostModal }) => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -32,10 +32,14 @@ export const Navbar = () => {
           <a href="#search" className="px-3.5 py-2 text-xs font-semibold text-[#0B5D2A] bg-[#EAF7EF] hover:bg-[#CBEED6] rounded-xl transition">
             বাসা খুঁজছেন?
           </a>
-          <a href="#post" className="px-3.5 py-2 text-xs font-semibold text-white bg-[#168A45] hover:bg-[#117037] rounded-xl shadow-sm transition flex items-center gap-1">
+          <button 
+            onClick={onOpenPostModal}
+            className="px-3.5 py-2 text-xs font-semibold text-white bg-[#168A45] hover:bg-[#117037] rounded-xl shadow-sm transition flex items-center gap-1 cursor-pointer"
+          >
             <PlusCircle className="w-4 h-4" /> বাসা ভাড়া দিন
-          </a>
+          </button>
         </div>
+        
       </div>
     </header>
   );

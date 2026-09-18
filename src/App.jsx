@@ -3,9 +3,13 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { PropertyCard } from './components/PropertyCard';
 import { AreaFilter } from './components/AreaFilter';
+import { AddPropertyModal } from './components/AddPropertyModal';
+import { ChatModal } from './components/ChatModal';
 
 export default function App() {
   const [selectedArea, setSelectedArea] = useState('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeChatProperty, setActiveChatProperty] = useState(null);
 
   const sampleProperties = [
     {
@@ -55,7 +59,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F8FAF8] flex flex-col">
-      <Navbar />
+      <Navbar onOpenPostModal={() => setIsModalOpen(true)} />
       <Hero />
 
       <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
@@ -71,7 +75,11 @@ export default function App() {
         {filteredProperties.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProperties.map((item) => (
-              <PropertyCard key={item.id} {...item} />
+              <PropertyCard 
+                key={item.id} 
+                {...item} 
+                onOpenChat={() => setActiveChatProperty(item)} 
+              />
             ))}
           </div>
         ) : (
@@ -79,13 +87,22 @@ export default function App() {
             <p className="text-sm font-semibold text-gray-600">এই এলাকায় মুহূর্তে কোনো বাসা পাওয়া যায়নি।</p>
             <button 
               onClick={() => setSelectedArea('all')}
-              className="mt-3 text-xs font-bold text-[#168A45] hover:underline"
+              className="mt-3 text-xs font-bold text-[#168A45] hover:underline cursor-pointer"
             >
               সব এলাকার বাসা দেখুন →
             </button>
           </div>
         )}
       </main>
+
+      <AddPropertyModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      
+      <ChatModal
+        isOpen={!!activeChatProperty}
+        onClose={() => setActiveChatProperty(null)}
+        propertyTitle={activeChatProperty?.title}
+        rent={activeChatProperty?.monthlyRent}
+      />
 
       <footer className="bg-white border-t border-gray-100 py-6 text-center text-xs text-gray-500">
         <p>© 2026 বাসা ভাড়া.com — জাহাঙ্গীরনগর বিশ্ববিদ্যালয় সংলগ্ন আবাসন প্ল্যাটফর্ম</p>
