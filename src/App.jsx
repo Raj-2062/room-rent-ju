@@ -5,8 +5,12 @@ import { PropertyCard } from './components/PropertyCard';
 import { AreaFilter } from './components/AreaFilter';
 import { AddPropertyModal } from './components/AddPropertyModal';
 import { ChatModal } from './components/ChatModal';
+import { MobileBottomNav } from './components/MobileBottomNav';
+import { Safety } from './pages/Safety';
+import { AdminDashboard } from './components/AdminDashboard';
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState('home');
   const [selectedArea, setSelectedArea] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeChatProperty, setActiveChatProperty] = useState(null);
@@ -58,45 +62,38 @@ export default function App() {
     : sampleProperties.filter(item => item.areaId === selectedArea);
 
   return (
-    <div className="min-h-screen bg-[#F8FAF8] flex flex-col">
-      <Navbar onOpenPostModal={() => setIsModalOpen(true)} />
-      <Hero />
+    <div className="min-h-screen bg-[#F8FAF8] flex flex-col pb-16 md:pb-0 font-bengali">
+      {/* Navigation */}
+      <Navbar 
+        onOpenPostModal={() => setIsModalOpen(true)} 
+        onNavigate={(tab) => setActiveTab(tab)}
+        activeTab={activeTab}
+      />
 
-      <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
-        <AreaFilter selectedArea={selectedArea} onSelectArea={setSelectedArea} />
+      {/* Main Views */}
+      {activeTab === 'home' && (
+        <>
+          <Hero />
+          <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 flex-1 w-full">
+            <AreaFilter selectedArea={selectedArea} onSelectArea={setSelectedArea} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+              {filteredProperties.map((item) => (
+                <PropertyCard 
+                  key={item.id} 
+                  {...item} 
+                  onOpenChat={() => setActiveChatProperty(item)} 
+                />
+              ))}
+            </div>
+          </main>
+        </>
+      )}
 
-        <div className="flex justify-between items-end mb-6">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900">জনপ্রিয় বাসা সমূহ</h2>
-            <p className="text-xs text-gray-500">জাহাঙ্গীরনগর বিশ্ববিদ্যালয়ের আশেপাশের যাচাইকৃত স্থান</p>
-          </div>
-        </div>
+      {activeTab === 'safety' && <Safety />}
+      {activeTab === 'admin' && <AdminDashboard />}
 
-        {filteredProperties.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties.map((item) => (
-              <PropertyCard 
-                key={item.id} 
-                {...item} 
-                onOpenChat={() => setActiveChatProperty(item)} 
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl p-8 text-center border border-gray-100 my-4">
-            <p className="text-sm font-semibold text-gray-600">এই এলাকায় মুহূর্তে কোনো বাসা পাওয়া যায়নি।</p>
-            <button 
-              onClick={() => setSelectedArea('all')}
-              className="mt-3 text-xs font-bold text-[#168A45] hover:underline cursor-pointer"
-            >
-              সব এলাকার বাসা দেখুন →
-            </button>
-          </div>
-        )}
-      </main>
-
+      {/* Modals & Full-Screen Drawers */}
       <AddPropertyModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-      
       <ChatModal
         isOpen={!!activeChatProperty}
         onClose={() => setActiveChatProperty(null)}
@@ -104,7 +101,15 @@ export default function App() {
         rent={activeChatProperty?.monthlyRent}
       />
 
-      <footer className="bg-white border-t border-gray-100 py-6 text-center text-xs text-gray-500">
+      {/* Mobile App-like Bottom Navigation Bar */}
+      <MobileBottomNav 
+        activeTab={activeTab}
+        onNavigate={setActiveTab}
+        onOpenPostModal={() => setIsModalOpen(true)}
+      />
+
+      {/* Desktop Footer */}
+      <footer className="bg-white border-t border-gray-100 py-6 text-center text-xs text-gray-500 mt-auto hidden md:block">
         <p>© 2026 বাসা ভাড়া.com — জাহাঙ্গীরনগর বিশ্ববিদ্যালয় সংলগ্ন আবাসন প্ল্যাটফর্ম</p>
       </footer>
     </div>

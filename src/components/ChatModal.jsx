@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Send, Image as ImageIcon, ShieldAlert, CheckCheck } from 'lucide-react';
+import { X, Send, Image as ImageIcon, ShieldAlert, CheckCheck, ArrowLeft } from 'lucide-react';
 
 export const ChatModal = ({ isOpen, onClose, propertyTitle, ownerName, rent }) => {
   const [messages, setMessages] = useState([
@@ -32,24 +32,28 @@ export const ChatModal = ({ isOpen, onClose, propertyTitle, ownerName, rent }) =
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col h-[550px]">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* Container: Full Screen on Mobile, Rounded Modal on Desktop */}
+      <div className="bg-white w-full h-full sm:h-[550px] sm:max-w-lg sm:rounded-2xl shadow-xl overflow-hidden flex flex-col">
         
-        {/* Header */}
-        <div className="p-4 bg-[#168A45] text-white flex justify-between items-center">
-          <div>
-            <h3 className="font-bold text-sm">{ownerName || 'রহিম আহমেদ (মালিক)'}</h3>
-            <p className="text-xs text-green-100 line-clamp-1">{propertyTitle || 'আমবাগান মেইন রোডের কাছে সিঙ্গেল রুম'} • ৳{rent || '৪,৫০০'}/মাস</p>
+        {/* Mobile Header with Back Button */}
+        <div className="p-3.5 bg-[#168A45] text-white flex items-center gap-3">
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition sm:hidden">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-sm truncate">{ownerName || 'রহিম আহমেদ (মালিক)'}</h3>
+            <p className="text-[11px] text-green-100 truncate">{propertyTitle || 'আমবাগান মেইন রোডের কাছে সিঙ্গেল রুম'} • ৳{rent || '৪,৫০০'}/মাস</p>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition">
+          <button onClick={onClose} className="hidden sm:block p-1 hover:bg-white/20 rounded-lg transition">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Safety Warning */}
-        <div className="bg-amber-50 p-2.5 border-b border-amber-100 flex items-center gap-2 text-[11px] text-amber-800">
+        <div className="bg-amber-50 px-3 py-2 border-b border-amber-100 flex items-center gap-2 text-[11px] text-amber-800">
           <ShieldAlert className="w-4 h-4 flex-shrink-0 text-amber-600" />
-          <span>নিরাপত্তার জন্য: অগ্রিম টাকা পাঠানোর আগে অবশ্যই বাসা সরেজমিনে গিয়ে যাচাই করুন।</span>
+          <span>অগ্রিম টাকা পাঠানোর আগে অবশ্যই বাসা সরেজমিনে গিয়ে যাচাই করুন।</span>
         </div>
 
         {/* Messages Body */}
@@ -57,13 +61,13 @@ export const ChatModal = ({ isOpen, onClose, propertyTitle, ownerName, rent }) =
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-xs shadow-sm ${
+                className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs shadow-sm ${
                   msg.sender === 'user'
                     ? 'bg-[#168A45] text-white rounded-br-none'
                     : 'bg-white text-gray-800 rounded-bl-none border border-gray-100'
                 }`}
               >
-                <p>{msg.text}</p>
+                <p className="leading-relaxed">{msg.text}</p>
                 <div className={`flex items-center justify-end gap-1 text-[9px] mt-1 ${msg.sender === 'user' ? 'text-green-100' : 'text-gray-400'}`}>
                   <span>{msg.time}</span>
                   {msg.sender === 'user' && <CheckCheck className="w-3 h-3" />}
@@ -73,23 +77,23 @@ export const ChatModal = ({ isOpen, onClose, propertyTitle, ownerName, rent }) =
           ))}
         </div>
 
-        {/* Quick Replies */}
-        <div className="p-2 bg-gray-50 border-t border-gray-100 flex gap-1.5 overflow-x-auto no-scrollbar">
+        {/* Horizontal Quick Replies Scroll */}
+        <div className="p-2 bg-gray-50 border-t border-gray-100 flex gap-2 overflow-x-auto scrollbar-none px-3">
           {quickReplies.map((reply, idx) => (
             <button
               key={idx}
               onClick={() => handleSend(reply)}
-              className="text-[11px] whitespace-nowrap bg-white border border-gray-200 hover:border-[#168A45] text-gray-600 px-2.5 py-1 rounded-full transition"
+              className="text-[11px] whitespace-nowrap bg-white border border-gray-200 hover:border-[#168A45] text-gray-700 px-3 py-1.5 rounded-full transition active:scale-95"
             >
               {reply}
             </button>
           ))}
         </div>
 
-        {/* Input Bar */}
+        {/* Touch-Friendly Input Bar */}
         <div className="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
           <button className="p-2 text-gray-400 hover:text-[#168A45] transition">
-            <ImageIcon className="w-4 h-4" />
+            <ImageIcon className="w-5 h-5" />
           </button>
           <input
             type="text"
@@ -97,11 +101,11 @@ export const ChatModal = ({ isOpen, onClose, propertyTitle, ownerName, rent }) =
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="মেসেজ লিখুন..."
-            className="flex-1 bg-gray-100 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#168A45]"
+            className="flex-1 bg-gray-100 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#168A45]"
           />
           <button
             onClick={() => handleSend()}
-            className="p-2 bg-[#168A45] hover:bg-[#117037] text-white rounded-xl transition"
+            className="p-2.5 bg-[#168A45] active:bg-[#117037] text-white rounded-xl transition shadow-sm"
           >
             <Send className="w-4 h-4" />
           </button>

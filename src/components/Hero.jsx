@@ -2,6 +2,12 @@ import React from 'react';
 import { Search, MapPin, Home, UserCheck } from 'lucide-react';
 
 export const Hero = () => {
+  const handleHeroSearch = (e) => {
+    e.preventDefault();
+    // সার্চ বাটনে ক্লিক করলে প্রপার্টি লিস্টে স্ক্রোল করবে
+    window.scrollTo({ top: 450, behavior: 'smooth' });
+  };
+
   return (
     <section className="relative bg-gradient-to-b from-[#EAF7EF] via-[#F8FAF8] to-[#F8FAF8] py-12 px-4">
       <div className="max-w-4xl mx-auto text-center space-y-4">
@@ -19,7 +25,7 @@ export const Hero = () => {
         </p>
 
         {/* Search Panel Box */}
-        <div className="bg-white p-4 md:p-6 rounded-2xl shadow-lg border border-gray-100 text-left mt-6">
+        <form onSubmit={handleHeroSearch} className="bg-white p-4 md:p-6 rounded-2xl shadow-lg border border-gray-100 text-left mt-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             
             {/* Area */}
@@ -64,13 +70,16 @@ export const Hero = () => {
 
             {/* Search Button */}
             <div className="flex items-end">
-              <button className="w-full bg-[#168A45] hover:bg-[#117037] text-white font-semibold p-2.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm">
+              <button 
+                type="submit"
+                className="w-full bg-[#168A45] hover:bg-[#117037] text-white font-semibold p-2.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm cursor-pointer"
+              >
                 <Search className="w-4 h-4" /> বাসা খুঁজুন
               </button>
             </div>
 
           </div>
-        </div>
+        </form>
 
       </div>
     </section>
