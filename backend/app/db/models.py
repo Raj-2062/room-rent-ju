@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, ForeignKey, 
-    Numeric, Text, Enum as SQLEnum, Float
+    Numeric, Text, Enum as SQLEnum, Float, JSON
 )
 from sqlalchemy.orm import relationship
 from app.db.database import Base
@@ -61,6 +61,10 @@ class Property(Base):
     monthly_rent = Column(Numeric(10, 2), nullable=False)
     advance_amount = Column(Numeric(10, 2), default=0.0)
     
+    # Image support
+    coverImage = Column(String(500), nullable=True)
+    images = Column(JSON, nullable=True, default=[])
+
     area_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
     address = Column(String(255), nullable=True)
     latitude = Column(Float, default=23.88)
@@ -70,4 +74,14 @@ class Property(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     area = relationship("LocalArea")
-    
+from sqlalchemy import Column, Integer, String
+from app.db.database import Base  # আপনার প্রজেক্টের স্থান অনুযায়ী Base ইমপোর্ট
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(String, index=True)
+    sender = Column(String)
+    text = Column(String)
+    timestamp = Column(String)

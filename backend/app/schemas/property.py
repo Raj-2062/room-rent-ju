@@ -1,17 +1,18 @@
 from pydantic import BaseModel
-from typing import Optional
-from decimal import Decimal
+from typing import Optional, List
 
 class PropertyCreate(BaseModel):
     title: str
     description: Optional[str] = None
-    property_type: str = "STUDENT_MESS"  # "FAMILY_FLAT" or "STUDENT_MESS"
+    property_type: Optional[str] = "STUDENT_MESS"
     accommodation_type: Optional[str] = "সিঙ্গেল রুম"
-    gender: str = "MALE"  # "MALE", "FEMALE", "BOTH"
-    monthly_rent: Decimal
-    advance_amount: Optional[Decimal] = 0.0
+    gender: Optional[str] = "MALE"
+    monthly_rent: float
+    advance_amount: Optional[float] = 0.0
     area_id: Optional[int] = 1
     address: Optional[str] = None
+    coverImage: Optional[str] = None
+    images: Optional[List[str]] = []
 
 class PropertyResponse(PropertyCreate):
     id: int
