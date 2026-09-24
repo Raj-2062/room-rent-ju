@@ -15,3 +15,12 @@ google-auth
 passlib
 bcrypt
 python-multipart
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+google-auth
+requests
+passlib
+bcrypt
+python-multipart
