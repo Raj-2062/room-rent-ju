@@ -1,0 +1,78 @@
+import React from 'react';
+import { ShieldCheck, AlertTriangle, Eye, CreditCard, UserCheck } from 'lucide-react';
+
+export const Safety = ({ onOpenAdminReport }) => {
+  const safetyTips = [
+    {
+      icon: <CreditCard className="w-6 h-6 text-red-500" />,
+      title: "অগ্রিম টাকা পাঠানোর আগে সতর্কতা",
+      desc: "বাসা সরাসরি না দেখে অথবা চুক্তিপত্র না করে কখনোই বিকাশ, নগদ বা ব্যাংকে অগ্রিম বুকিং মানি পাঠাবেন না।"
+    },
+    {
+      icon: <Eye className="w-6 h-6 text-[#168A45]" />,
+      title: "সরেজমিনে বাসা পরিদর্শন করুন",
+      desc: "অবশ্যই বাসা, ঘরের আলো-বাতাস, পানির ব্যবস্থা, গ্যাস ও ওয়াইফাই সুযোগ-সুবিধা নিজের চোখে দেখে নিন।"
+    },
+    {
+      icon: <UserCheck className="w-6 h-6 text-[#168A45]" />,
+      title: "মালিকের পরিচয় যাচাইকরণ",
+      desc: "প্রয়োজনে বাসা মালিকের জাতীয় পরিচয়পত্র (NID) ও যোগাযোগের নম্বর সংগৃহীত রাখুন।"
+    },
+    {
+      icon: <AlertTriangle className="w-6 h-6 text-amber-500" />,
+      title: "সন্দেহজনক বিজ্ঞাপন রিপোর্ট করুন",
+      desc: "ভুল তথ্য বা ভুয়া ভাড়ার বিবরণ দেখলে সাথে সাথেই বিজ্ঞাপনের 'Report' বোতামে ক্লিক করুন।"
+    }
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-10 font-bengali space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-3">
+        <span className="bg-[#EAF7EF] text-[#0B5D2A] text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1">
+          <ShieldCheck className="w-4 h-4 text-[#168A45]" /> বাসা ভাড়া ট্রাস্ট ও নিরাপত্তা guide
+        </span>
+        <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900">নিরাপদে বাসা ভাড়া নিন</h1>
+        <p className="text-gray-600 text-sm max-w-xl mx-auto">
+          জাহাঙ্গীরনগর বিশ্ববিদ্যালয়ের শিক্ষার্থীদের নিরাপদে বাসা খুঁজে পেতে আমাদের বিশেষ দিকনির্দেশনা।
+        </p>
+      </div>
+
+      {/* Safety Tips Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {safetyTips.map((tip, idx) => (
+          <div key={idx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+            <div className="p-3 bg-gray-50 rounded-xl w-fit">{tip.icon}</div>
+            <h3 className="font-bold text-base text-gray-900">{tip.title}</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">{tip.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Finder & Owner Direct Admin Report Box */}
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-6 md:p-8 text-center space-y-4 shadow-sm">
+        <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto">
+          <AlertTriangle className="w-6 h-6" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="font-bold text-base text-gray-900">কোনো ভুয়া বিজ্ঞাপন বা প্রতারণার মুখোমুখি হয়েছেন?</h3>
+          <p className="text-xs text-gray-600 max-w-md mx-auto leading-relaxed">
+            যদি কোনো অননুমোদিত কার্যক্রম, প্রতারণা বা সন্দেহজনক বিজ্ঞাপনের সন্ধান পান, তবে তাৎক্ষণিকভাবে সরাসরি সিস্টেম অ্যাডমিনের কাছে জরুরি অভিযোগ পাঠান।
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            if (typeof onOpenAdminReport === 'function') {
+              onOpenAdminReport();
+            } else {
+              alert("সরাসরি রিপোর্ট করতে অনুগ্রহ করে আপনার ড্যাশবোর্ড বা মেসেজ ইনবক্স থেকে যেকোনো চ্যাটের 'অ্যাডমিন রিপোর্ট' বাটন ব্যবহার করুন।");
+            }
+          }}
+          className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition cursor-pointer shadow-sm inline-flex items-center gap-2"
+        >
+          <AlertTriangle className="w-4 h-4" /> অ্যাডমিনকে জরুরি রিপোর্ট করুন
+        </button>
+      </div>
+    </div>
+  );
+};
