@@ -1,5 +1,11 @@
-const API_BASE_URL = 'http://localhost:8000';
-const WS_BASE_URL = 'ws://localhost:8000';
+// Localhost ki-na ta check kore dynamic URL set kora hocche
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : 'https://your-backend-name.onrender.com'; // Ekhane apnar Render-er real backend URL-ti bosaben
+
+const WS_BASE_URL = window.location.hostname === 'localhost'
+  ? 'ws://localhost:8000'
+  : 'wss://your-backend-name.onrender.com'; // Render-er jonno 'wss://' use korte hobe
 
 // Fetch properties with filters & sorting
 export const fetchProperties = async (filters = {}) => {
