@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { X, Lock, Mail, User, ShieldCheck } from 'lucide-react';
 
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : 'https://room-rent-ju.onrender.com'; //[cite: 4]
+
 export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,7 +27,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
     const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
 
     try {
-      const response = await fetch(`http://localhost:8000${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -56,12 +60,12 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
       const googleEmail = prompt("আপনার সঠিক গুগল ইমেইল ঠিকানাটি লিখুন:");
       
       if (!googleEmail || !googleEmail.trim() || !googleEmail.includes('@')) {
-        setError('দয়া করে একটি সঠিক গুগল ইমেইল ঠিকানা দিন।');
+        setError('দয়া করে একটি সঠিক গুগল ইমেইল ঠিকানা দিন।');
         setLoading(false);
         return;
       }
       
-      const response = await fetch('http://localhost:8000/api/auth/google', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
