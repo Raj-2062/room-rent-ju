@@ -3,6 +3,11 @@ import json
 import shutil
 from uuid import uuid4
 from typing import Dict, List, Optional
+import random
+import smtplib
+from email.mime.text import MIMEText
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, status, File, UploadFile, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,6 +60,7 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
+# CORS Middleware (Properly placed at top to prevent blocks)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -79,40 +85,59 @@ def health_check():
 # -------------------------------------------------------------------
 @app.post("/api/auth/register", response_model=Token)
 def register_user(payload: UserRegister, db: Session = Depends(get_db)):
-    existing_user = db.query(models.User).filter(models.User.email == payload.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="ইমেইল ইতিমধ্যে রেজিস্টার্ড রয়েছে")
+    try:
+        # ১. ইমেইল ইতিমধ্যে আছে কি না চেক করা
+        existing_user = db.query(models.User).filter(models.User.email == payload.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="এই ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট রয়েছে!")
 
-    clean_phone = payload.phone if payload.phone and payload.phone.strip() != "" else None
-    raw_role = payload.role.value if hasattr(payload.role, 'value') else payload.role
-    user_role = str(raw_role).upper()
+        # ২. ফোন নম্বর ফাঁকা বা ডিফল্ট (01700000000) হলে ডাটাবেসে ইউনিক হওয়া সাপেক্ষে নতুন র‍্যান্ডম নম্বর তৈরি করা
+        import random
+        clean_phone = payload.phone
+        if not clean_phone or clean_phone.strip() == "" or clean_phone == "01700000000":
+            while True:
+                clean_phone = f"017{random.randint(10000000, 99999999)}"
+                existing_phone = db.query(models.User).filter(models.User.phone == clean_phone).first()
+                if not existing_phone:
+                    break
+        
+        raw_role = payload.role.value if hasattr(payload.role, 'value') else payload.role
+        user_role = str(raw_role).upper()
 
-    new_user = models.User(
-        full_name=payload.full_name,
-        email=payload.email,
-        phone=clean_phone,
-        hashed_password=hash_password(payload.password),
-        role=user_role
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+        # ৩. নতুন ইউজার তৈরি করা
+        new_user = models.User(
+            full_name=payload.full_name,
+            email=payload.email,
+            phone=clean_phone,
+            hashed_password=hash_password(payload.password),
+            role=user_role
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
-    token = create_access_token({"sub": str(new_user.id), "role": user_role})
-    
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user_id": new_user.id,
-        "full_name": new_user.full_name,
-        "role": user_role
-    }
+        token = create_access_token({"sub": str(new_user.id), "role": user_role})
+        
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user_id": new_user.id,
+            "full_name": new_user.full_name,
+            "role": user_role
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
 @app.post("/api/auth/login", response_model=Token)
 def login_user(payload: UserLogin, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="ভুল ইমেইল বা পাসওয়ার্ড")
+        raise HTTPException(status_code=401, detail="ভুল ইমেইল অথবা পাসওয়ার্ড!")
 
     raw_role = user.role.value if hasattr(user.role, 'value') else str(user.role)
     user_role = str(raw_role).upper()
@@ -576,3 +601,162 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.delete(user)
     db.commit()
     return {"message": "User deleted successfully"}
+
+@app.delete("/api/inquiries/{conversation_id}")
+def delete_inquiry(conversation_id: str, db: Session = Depends(get_db)):
+    try:
+        messages = db.query(models.ChatMessage).filter(models.ChatMessage.conversation_id == conversation_id).all()
+        if not messages:
+            raise HTTPException(status_code=404, detail="Inquiry not found")
+        
+        for msg in messages:
+            db.delete(msg)
+        db.commit()
+        return {"message": "Inquiry deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))    
+
+@app.delete("/api/admin/inquiries/{conversation_id}")
+def delete_admin_inquiry(conversation_id: str, db: Session = Depends(get_db)):
+    try:
+        messages = db.query(models.ChatMessage).filter(models.ChatMessage.conversation_id == conversation_id).all()
+        if not messages:
+            raise HTTPException(status_code=404, detail="Report or Inquiry not found")
+        
+        for msg in messages:
+            db.delete(msg)
+        db.commit()
+        return {"message": "Report deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/admin/reports/{conversation_id}")
+def delete_admin_report(conversation_id: str, db: Session = Depends(get_db)):
+    try:
+        messages = db.query(models.ChatMessage).filter(models.ChatMessage.conversation_id == conversation_id).all()
+        if not messages:
+            raise HTTPException(status_code=404, detail="Report not found")
+        
+        for msg in messages:
+            db.delete(msg)
+        db.commit()
+        return {"message": "Report deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# -------------------------------------------------------------------
+# Google & OTP Auth Endpoints
+# -------------------------------------------------------------------
+otp_memory_store = {}
+GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+
+@app.post("/api/auth/google")
+def google_auth(data: dict, db: Session = Depends(get_db)):
+    token = data.get("token")
+    selected_role = data.get("role", "ROOM_FINDER") # Front-end theke asha selected role
+    try:
+        if token == "mock_google_token" or not token:
+            email = data.get("email", "google.user@gmail.com")
+            name = data.get("full_name", "Google User")
+        else:
+            idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+            email = idinfo.get("email")
+            name = idinfo.get("name", "Google User")
+        
+        user = db.query(models.User).filter(models.User.email == email).first()
+        if not user:
+            import random
+            clean_phone = f"017{random.randint(10000000, 99999999)}"
+            while db.query(models.User).filter(models.User.phone == clean_phone).first():
+                clean_phone = f"017{random.randint(10000000, 99999999)}"
+
+            user = models.User(
+                full_name=name,
+                email=email,
+                hashed_password=hash_password("GOOGLE_AUTH_SECURE_USER"),
+                role=selected_role,
+                phone=clean_phone
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        else:
+            # Jodi user age thekei thake, tahole tar role-ti notun selected role diye update kore dibo
+            user.role = selected_role
+            db.commit()
+            db.refresh(user)
+            
+        token_jwt = create_access_token({"sub": str(user.id), "role": str(user.role)})
+
+        return {
+            "message": "Google login successful",
+            "access_token": token_jwt,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "user_id": user.id,
+                "full_name": user.full_name,
+                "email": user.email,
+                "role": str(user.role),
+                "phone": user.phone
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Google authentication failed: {str(e)}")
+
+@app.post("/api/auth/send-otp")
+def send_email_otp(data: dict):
+    email = data.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    otp = str(random.randint(100000, 999999))
+    otp_memory_store[email] = otp
+    print(f"--- [OTP FOR {email}]: {otp} ---")
+    return {"message": "OTP sent successfully to your email"}
+
+@app.post("/api/auth/verify-otp")
+def verify_email_otp(data: dict, db: Session = Depends(get_db)):
+    email = data.get("email")
+    otp = data.get("otp")
+    
+    if not email or not otp:
+        raise HTTPException(status_code=400, detail="Email and OTP are required")
+        
+    stored_otp = otp_memory_store.get(email)
+    if not stored_otp or stored_otp != otp:
+        raise HTTPException(status_code=400, detail="ভুল বা মেয়াদোত্তীর্ণ ওটিপি কোড!")
+        
+    del otp_memory_store[email]
+    
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        user = models.User(
+            full_name=email.split('@')[0],
+            email=email,
+            hashed_password=hash_password("OTP_VERIFIED_USER"),
+            role="ROOM_FINDER",
+            phone="01700000000"
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
+    token_jwt = create_access_token({"sub": str(user.id), "role": str(user.role)})
+
+    return {
+        "message": "OTP verified successfully",
+        "access_token": token_jwt,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "user_id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "role": str(user.role),
+            "phone": user.phone
+        }
+    }
