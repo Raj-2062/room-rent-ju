@@ -1,9 +1,9 @@
 const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:8001'
+  ? 'http://localhost:8000'
   : 'https://room-rent-ju.onrender.com';
 
 const WS_BASE_URL = window.location.hostname === 'localhost'
-  ? 'ws://localhost:8001'
+  ? 'ws://localhost:8000'
   : 'wss://room-rent-ju.onrender.com';
 
 // Fetch properties with filters & sorting
